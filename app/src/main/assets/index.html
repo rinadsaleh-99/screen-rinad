@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101b2b">
+<title>شاشة ريناد</title>
+<style>
+*{box-sizing:border-box} body{margin:0;color:#fff;font-family:Tahoma,Arial,sans-serif;background:
+radial-gradient(ellipse at 50% 22%,rgba(246,174,199,.18),transparent 44%),
+linear-gradient(180deg,rgba(9,18,38,.18),rgba(7,13,28,.88)),
+url('https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1920&q=90') center/cover fixed;
+background-color:#101b2b;min-height:100vh;transition:filter 1.5s ease,background-color 1.5s ease}
+body.day{filter:brightness(1.18) saturate(1.12)}
+body.sunset{filter:sepia(.18) saturate(1.22) brightness(.92)}
+body.night{filter:brightness(.68) saturate(.9)}
+body.cloudy{filter:brightness(.82) saturate(.72)}
+body.rain{filter:brightness(.72) saturate(.8)}
+body.dust{filter:sepia(.38) saturate(.75) brightness(.85)}
+.overlay{min-height:100vh;padding:4vh 5vw;display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(90deg,rgba(5,15,29,.20),rgba(5,15,29,.52))}
+header{display:flex;justify-content:space-between;align-items:center}.brand{font-size:clamp(22px,2vw,34px);letter-spacing:.5px;color:#f3d9b2}.date{text-align:left;color:#e6eaf0;font-size:clamp(16px,1.4vw,22px)}
+main{display:grid;grid-template-columns:1.15fr .85fr;gap:4vw;align-items:center}.clock{font-size:clamp(72px,11vw,160px);font-weight:300;line-height:1;letter-spacing:2px}.greeting{font-size:clamp(22px,2.3vw,34px);color:#f3d9b2;margin-top:18px}.weather{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);border-radius:26px;padding:28px;backdrop-filter:blur(12px)}.temp{font-size:clamp(48px,6vw,82px)}.muted{color:#cbd5e1;font-size:18px}.prayers{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:26px}.prayer{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:16px;text-align:center}.prayer b{display:block;font-size:20px;margin-bottom:8px;color:#f3d9b2}.prayer span{font-size:20px}.bottom{display:flex;justify-content:space-between;align-items:end;color:#dbe4ee}.next{font-size:20px}.apps{display:flex;gap:12px}.app{padding:12px 20px;border-radius:14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18)}
+@media(max-width:850px){main{grid-template-columns:1fr}.prayers{grid-template-columns:repeat(5,1fr)}.overlay{padding:24px}}
+</style></head>
+<body><div class="overlay">
+<header><div></div><div class="date"><div id="greg">—</div><div id="hijri">—</div></div></header>
+<main><section><div class="clock" id="clock">--:--</div><div class="greeting" id="greet">مساء الخير</div><div class="muted">الرياض · المملكة العربية السعودية</div></section>
+<section class="weather"><div class="muted">طقس الرياض الآن</div><div class="temp" id="temp">—°</div><div id="weatherText">جارٍ تحميل حالة الطقس</div><div class="muted" id="feels"></div><div class="muted" id="skyState" style="margin-top:12px">يتغير المشهد تلقائياً حسب الوقت والجو</div></section></main>
+<section><div class="prayers" id="prayers">
+<div class="prayer"><b>الفجر</b><span>—</span></div><div class="prayer"><b>الشروق</b><span>—</span></div><div class="prayer"><b>الظهر</b><span>—</span></div><div class="prayer"><b>العصر</b><span>—</span></div><div class="prayer"><b>المغرب</b><span>—</span></div>
+</div></section>
+<footer class="bottom"><div class="next" id="next">مواقيت الصلاة · الرياض</div><div class="apps"><div class="app">التطبيقات</div><div class="app">الإعدادات</div></div></footer>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+function tick(){let d=new Date();$('clock').textContent=d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit',hour12:true});$('greg').textContent=d.toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});$('hijri').textContent=new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{year:'numeric',month:'long',day:'numeric'}).format(d);$('greet').textContent=d.getHours()<12?'صباح الخير':'مساء الخير'}
+tick();setInterval(tick,1000);setInterval(()=>setScene(),60000);
+function setScene(code=0){const h=new Date().getHours();document.body.classList.remove('day','sunset','night','cloudy','rain','dust');let phase=h>=6&&h<16?'day':h>=16&&h<19?'sunset':'night';let weather=code>=95?'rain':(code>=51&&code<=82)?'rain':(code>=45&&code<=48)?'cloudy':(code>=3&&code<=4)?'cloudy':'clear';document.body.classList.add(phase);if(weather!=='clear')document.body.classList.add(weather);$('skyState').textContent=weather==='rain'?'أجواء ممطرة في الرياض':weather==='cloudy'?'أجواء غائمة في الرياض':phase==='day'?'نهار الرياض':'أجواء الرياض المسائية'}
+async function load(){try{let r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=24.7136&longitude=46.6753&current=temperature_2m,apparent_temperature,weather_code&timezone=Asia%2FRiyadh');let j=await r.json();$('temp').textContent=Math.round(j.current.temperature_2m)+'°';$('feels').textContent='المحسوسة '+Math.round(j.current.apparent_temperature)+'°';let c=j.current.weather_code;$('weatherText').textContent=c===0?'سماء صافية':c<3?'غائم جزئياً':c<50?'غائم':'احتمال أمطار';setScene(c)}catch(e){$('weatherText').textContent='تعذر تحديث الطقس';setScene(0)}}
+async function prayer(){try{let r=await fetch('https://api.aladhan.com/v1/timingsByCity?city=Riyadh&country=Saudi%20Arabia&method=4');let j=await r.json(),t=j.data.timings,keys=['Fajr','Sunrise','Dhuhr','Asr','Maghrib'];let names=['الفجر','الشروق','الظهر','العصر','المغرب'];$('prayers').innerHTML=keys.map((k,i)=>`<div class="prayer"><b>${names[i]}</b><span>${t[k]}</span></div>`).join('');$('next').textContent='مواقيت الصلاة اليوم · الرياض'}catch(e){$('next').textContent='تعذر تحميل مواقيت الصلاة'}}
+load();prayer();setInterval(load,1800000);setInterval(prayer,3600000);
+</script></body></html>
